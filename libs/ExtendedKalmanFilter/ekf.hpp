@@ -1,12 +1,4 @@
-#include <boost/qvm/mat.hpp>
-#include <boost/qvm/vec.hpp>
-#include <boost/qvm/mat_operations.hpp>
-#include <boost/qvm/vec_mat_operations.hpp>
-#include <boost/qvm/vec_operations.hpp>
-#include <boost/qvm/map_mat_mat.hpp>
-#include <boost/qvm/mat_access.hpp>
-#include <boost/qvm/vec_access.hpp>
-#include <boost/qvm/map_mat_vec.hpp>
+#include <boost/qvm/lite.hpp>
 
 class EKF
 {
