@@ -7,42 +7,34 @@ namespace sefl
     class ekf
     {
         public:
-            ekf(boost::qvm::mat<T, n, n> Q_0, boost::qvm::mat<T, n, n> R_0,
-                    boost::qvm::mat<T, n, n> P_0 = boost::qvm::identity_mat<T, n>(),
+            ekf(boost::qvm::mat<T, n, n> P_0 = boost::qvm::identity_mat<T, n>(),
                     boost::qvm::vec<T, n> x_0 = boost::qvm::zero_vec<T, n>()):
-                x(x_0), P(P_0), Q(Q_0), R(R_0) {}
+                x(x_0), P(P_0) {}
 
 
             template<int m> 
-            void predict(boost::qvm::vec<T, m> u, T dt,
+            void predict(boost::qvm::vec<T, m> u, boost::qvm::vec<T, m> var_u, T dt,
                     boost::qvm::vec<T, n> (*f)(boost::qvm::vec<T, n> x, boost::qvm::vec<T, m> u),
                     boost::qvm::mat<T, n, n> (*F) (boost::qvm::vec<T, n> x, boost::qvm::vec<T, m> u));
 
             template<int m>
-            void update(boost::qvm::vec<T, m> z,
+            void update(boost::qvm::vec<T, m> z, boost::qvm::mat<T, n, n> R,
                     boost::qvm::vec<T, m> (*h) (boost::qvm::vec<T, n> x),
                     boost::qvm::mat<T, m, m> (*H) (boost::qvm::vec<T, n> x));
 
-            boost::qvm::vec<float, 3> f(const boost::qvm::vec<float, 3> &x, const boost::qvm::vec<float, 3> &u);
-            boost::qvm::mat<float, 3, 3> F(const boost::qvm::vec<float, 3> &x, const boost::qvm::vec<float, 3> &u);
-            boost::qvm::vec<float, 3> h(const boost::qvm::vec<float, 3> &x);
-            boost::qvm::mat<float, 3, 3> H(const boost::qvm::vec<float, 3> &x);
-
         private:
             boost::qvm::vec<T, n> x;        //state estimate
-            boost::qvm::mat<T, n, n> P;     //covariance estimate
-
-            const boost::qvm::mat<T, n, n> Q;
-            const boost::qvm::mat<T, n, n> R;
+            boost::qvm::mat<T, n, n> P;     //covariance estimate            
     };
 }
 
 template<class T, int n>
 template<int m>
-void sefl::ekf<T, n>::predict(boost::qvm::vec<T, m> u, T dt,
+void sefl::ekf<T, n>::predict(boost::qvm::vec<T, m> u, boost::qvm::vec<T, m> var_u, T dt,
                     boost::qvm::vec<T, n> (*f)(boost::qvm::vec<T, n> x, boost::qvm::vec<T, m> u),
                     boost::qvm::mat<T, n, n> (*F) (boost::qvm::vec<T, n> x, boost::qvm::vec<T, m> u))
 {
+    boost::qvm::mat<T, n, n> Q = f(x, var_u);
     boost::qvm::mat<T, n, n> F_k= F(x,u);
     P += (F_k * P + P * transposed(F_k) + Q) * dt;              //Predicted covariance estimate
     x += f(x,u) * dt;                                           //Predicted state estimate
@@ -50,7 +42,7 @@ void sefl::ekf<T, n>::predict(boost::qvm::vec<T, m> u, T dt,
 
 template<class T, int n>
 template<int m>
-void sefl::ekf<T, n>::update(boost::qvm::vec<T, m> z,
+void sefl::ekf<T, n>::update(boost::qvm::vec<T, m> z, boost::qvm::mat<T, n, n> R,
                     boost::qvm::vec<T, m> (*h) (boost::qvm::vec<T, n> x),
                     boost::qvm::mat<T, m, m> (*H) (boost::qvm::vec<T, n> x))
 {
